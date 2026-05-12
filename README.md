@@ -225,7 +225,38 @@ npm start
 
 | Tecnología | Versión | Uso |
 |------------|---------|-----|
-| Next.js | 16 | Framework fullstack (App Router) |
-| TypeScript | 5 | Tipado estático |
-| Tailwind CSS | 3 | Estilos utilitarios |
+| Next.js | ^16.2.6 | Framework fullstack (App Router) |
+| React | ^19.0.0 | Librería de UI |
+| React DOM | ^19.0.0 | Renderizado en el navegador |
+| TypeScript | ^5.x | Tipado estático |
+| Tailwind CSS | ^3.4.19 | Estilos utilitarios |
+| PostCSS | ^8.5.14 | Procesamiento de CSS |
+| Autoprefixer | ^10.5.0 | Compatibilidad de prefijos CSS |
+| @types/node | ^20.x | Tipos de Node.js para TypeScript |
+| @types/react | ^19.x | Tipos de React para TypeScript |
 | Node.js fetch | nativo | Cliente HTTP hacia microservicios |
+
+---
+
+## Por qué Next.js y no otro framework
+
+### Alternativas consideradas
+
+| Framework | Motivo de descarte |
+|-----------|-------------------|
+| **Express + React (SPA)** | Requiere mantener dos proyectos separados: un servidor Express para el BFF y un cliente React. Next.js unifica ambos en un solo proyecto con App Router. |
+| **NestJS** | Excelente para APIs puras, pero no incluye rendering de UI. Al necesitar también un portal web hospitalario, añadir React por separado duplica la complejidad. |
+| **Remix** | Buena opción fullstack, pero el ecosistema es más pequeño, con menos integración nativa para patterns como API Routes, middleware y Server Components. |
+| **Vite + React (SPA pura)** | No tiene servidor propio; el BFF necesita ejecutar lógica server-side (validación de tokens, llamadas a microservicios) que no debe exponerse al navegador. |
+
+### Por qué Next.js encaja en este proyecto
+
+1. **BFF nativo con API Routes** — las rutas bajo `src/app/api/` corren en el servidor de Node.js, no en el browser. Esto permite llamar a los microservicios Java con credenciales o lógica privada sin exponerlas al cliente.
+
+2. **Frontend y backend en un solo repositorio** — el portal hospitalario (páginas de login, dashboard, registro) y los endpoints del BFF conviven en el mismo proyecto, con el mismo lenguaje (TypeScript) y las mismas herramientas de build.
+
+3. **App Router con React Server Components** — permite hacer fetching de datos directamente en el servidor, reduciendo roundtrips y mejorando el tiempo de carga del portal.
+
+4. **TypeScript de primera clase** — la configuración de TS viene incluida y optimizada; no hace falta configurar Babel, Webpack ni loaders manualmente.
+
+5. **Despliegue simple** — un solo `npm run build && npm start` levanta tanto el servidor del BFF como el portal, sin necesidad de orquestar procesos separados.
