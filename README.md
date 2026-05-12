@@ -58,8 +58,11 @@ src/
 │   │       ├── route.ts              GET  /api/users  |  POST /api/users
 │   │       └── [id]/route.ts         GET / PUT / DELETE /api/users/:id
 │   │
-│   ├── components/
-│   │   └── LoginForm.tsx             Formulario de login (cliente)
+│   ├── components/                   ← Componentes reutilizables
+│   │   ├── Alert.tsx                 Alertas de error y éxito
+│   │   ├── HospitalLogo.tsx          Logo del hospital (tamaño sm/md, con o sin enlace)
+│   │   ├── LoginForm.tsx             Formulario de login (cliente)
+│   │   └── SimpleNav.tsx             Navbar con logo + enlace de vuelta
 │   │
 │   ├── dashboard/
 │   │   └── page.tsx                  Panel del usuario autenticado
@@ -79,6 +82,7 @@ src/
 │   │   ├── auth.repository.ts        HTTP → ms-auth :8080
 │   │   └── auth.service.ts
 │   └── users/
+│       ├── users.constants.ts        DOC_TYPES, DOC_LABELS, ROLE_LABELS, ROLE_COLORS
 │       ├── users.types.ts            CreateUserRequest, UserResponse, IUsersRepository
 │       ├── users.repository.ts       HTTP → ms-user :8081
 │       └── users.service.ts
@@ -87,8 +91,41 @@ src/
     ├── api-error.ts                  Error tipado con status HTTP
     ├── env.ts                        Variables de entorno centralizadas
     ├── http-client.ts                Cliente fetch (GET / POST / PUT / DELETE)
-    └── route-handler.ts              Helper de manejo de errores en rutas
+    ├── route-handler.ts              Helper de manejo de errores en rutas
+    ├── session.ts                    getSession() y clearSession() para storage
+    └── styles.ts                     Clases CSS compartidas (inputClass)
 ```
+
+---
+
+## Reutilización de componentes y utilidades
+
+El proyecto aplica reutilización en tres niveles:
+
+### Componentes UI compartidos (`src/app/components/`)
+
+| Componente | Usado en | Responsabilidad |
+|------------|----------|-----------------|
+| `HospitalLogo` | `page.tsx`, `dashboard/`, `register/`, `register/staff/` | Logo + nombre del hospital, tamaño configurable, envuelve en `<Link>` si recibe `href` |
+| `SimpleNav` | `register/page.tsx`, `register/staff/page.tsx` | Navbar estándar con logo y enlace de retorno |
+| `Alert` | `LoginForm`, `register/`, `register/staff/`, `dashboard/` | Alerta de `error` o `success` con estilos consistentes |
+
+### Constantes de dominio compartidas (`src/features/users/users.constants.ts`)
+
+| Constante | Tipo | Usado en |
+|-----------|------|----------|
+| `DOC_TYPES` | `readonly array` | Ambos registros |
+| `DOC_LABELS` | `Record` | Ambos registros + dashboard |
+| `STAFF_ROLES` | `readonly array` | Registro de staff |
+| `ROLE_LABELS` | `Record` | Registro de staff + dashboard |
+| `ROLE_COLORS` | `Record` | Registro de staff |
+
+### Utilidades de lib (`src/lib/`)
+
+| Utilidad | Usado en | Responsabilidad |
+|----------|----------|-----------------|
+| `inputClass` (`styles.ts`) | Ambos registros | String de clases Tailwind para inputs del formulario |
+| `getSession` / `clearSession` (`session.ts`) | `dashboard/`, `register/staff/` | Lectura y limpieza de `localStorage`/`sessionStorage` |
 
 ---
 

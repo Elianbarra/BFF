@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Alert } from "./Alert";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -52,15 +53,9 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {justRegistered && (
-        <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl">
-          Cuenta creada correctamente. Ya puede iniciar sesión.
-        </div>
+        <Alert variant="success" message="Cuenta creada correctamente. Ya puede iniciar sesión." />
       )}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
-          {error}
-        </div>
-      )}
+      {error && <Alert variant="error" message={error} />}
 
       <input
         type="email"

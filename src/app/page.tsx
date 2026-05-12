@@ -1,5 +1,6 @@
-import { LoginForm } from "./components/LoginForm";
 import { Suspense } from "react";
+import { LoginForm } from "./components/LoginForm";
+import { HospitalLogo } from "./components/HospitalLogo";
 
 const NAV_LINKS = ["Especialidades", "Servicios", "Profesionales", "Sobre nosotros", "Contacto"];
 
@@ -40,25 +41,6 @@ function CheckIcon() {
   );
 }
 
-function HospitalLogo({ size = "md" }: { size?: "sm" | "md" }) {
-  const box = size === "sm" ? "w-8 h-8 text-lg" : "w-10 h-10 text-xl";
-  return (
-    <div className="flex items-center gap-3">
-      <div className={`${box} bg-blue-700 rounded-lg flex items-center justify-center text-white font-black`}>
-        +
-      </div>
-      <div>
-        <div className={`font-bold text-gray-900 ${size === "sm" ? "text-sm" : ""}`}>
-          Hospital San Rafael
-        </div>
-        <div className="text-xs text-gray-500">
-          {size === "sm" ? "Av. de la Salud 124, 28001 Madrid" : "Sistema de salud integral"}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -76,10 +58,7 @@ export default function Home() {
             900 123 456
           </span>
           <span className="text-gray-600">|</span>
-          <span>
-            Urgencias 24h ·{" "}
-            <strong className="text-white font-bold">112</strong>
-          </span>
+          <span>Urgencias 24h · <strong className="text-white font-bold">112</strong></span>
           <span className="text-gray-600">|</span>
           <span className="flex items-center gap-1.5">
             <button className="text-white font-semibold">ES</button>
@@ -94,11 +73,7 @@ export default function Home() {
         <HospitalLogo />
         <div className="flex items-center gap-8">
           {NAV_LINKS.map((link) => (
-            <a
-              key={link}
-              href="#"
-              className="text-blue-700 hover:text-blue-900 text-sm font-medium transition-colors"
-            >
+            <a key={link} href="#" className="text-blue-700 hover:text-blue-900 text-sm font-medium transition-colors">
               {link}
             </a>
           ))}
@@ -114,34 +89,22 @@ export default function Home() {
       {/* Hero */}
       <main
         className="flex-1"
-        style={{
-          backgroundImage: "radial-gradient(#e2e8f0 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }}
+        style={{ backgroundImage: "radial-gradient(#e2e8f0 1px, transparent 1px)", backgroundSize: "24px 24px" }}
       >
         <div className="max-w-7xl mx-auto px-8 py-20 flex items-center gap-20">
-          {/* Left — copy */}
           <div className="flex-1 min-w-0">
             <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full mb-7 tracking-wide">
               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
               PORTAL DEL PACIENTE
             </div>
-
             <h1 className="text-5xl font-black text-gray-900 leading-[1.1] mb-6">
               Su salud,{" "}
-              <em className="not-italic italic text-blue-700">
-                siempre
-                <br />
-                cerca.
-              </em>
+              <em className="not-italic italic text-blue-700">siempre<br />cerca.</em>
             </h1>
-
             <p className="text-gray-500 text-base leading-relaxed mb-10 max-w-md">
-              Acceda de forma segura a su historia clínica, consulte resultados
-              de pruebas, gestione sus citas y comuníquese con su equipo médico
-              desde un único lugar.
+              Acceda de forma segura a su historia clínica, consulte resultados de pruebas,
+              gestione sus citas y comuníquese con su equipo médico desde un único lugar.
             </p>
-
             <ul className="flex flex-col gap-5">
               {FEATURES.map(({ title, desc }) => (
                 <li key={title} className="flex items-start gap-3">
@@ -155,15 +118,10 @@ export default function Home() {
             </ul>
           </div>
 
-          {/* Right — login card */}
           <div className="w-[420px] flex-shrink-0">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                Acceder al portal
-              </h2>
-              <p className="text-sm text-gray-500 mb-7">
-                Introduzca sus credenciales
-              </p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Acceder al portal</h2>
+              <p className="text-sm text-gray-500 mb-7">Introduzca sus credenciales</p>
               <Suspense>
                 <LoginForm />
               </Suspense>
@@ -174,9 +132,7 @@ export default function Home() {
         {/* Stats */}
         <div className="border-t border-gray-100 bg-white/80 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-8 py-10">
-            <p className="text-xs font-bold text-gray-400 tracking-[0.2em] mb-5">
-              CONFIANZA DESDE 1947
-            </p>
+            <p className="text-xs font-bold text-gray-400 tracking-[0.2em] mb-5">CONFIANZA DESDE 1947</p>
             <div className="flex gap-16">
               {STATS.map(([value, label]) => (
                 <div key={label}>
@@ -195,18 +151,11 @@ export default function Home() {
           <HospitalLogo size="sm" />
           {FOOTER_COLS.map(([title, links]) => (
             <div key={title}>
-              <h4 className="text-xs font-bold text-gray-400 tracking-[0.15em] mb-4">
-                {title}
-              </h4>
+              <h4 className="text-xs font-bold text-gray-400 tracking-[0.15em] mb-4">{title}</h4>
               <ul className="flex flex-col gap-2.5">
                 {links.map((link) => (
                   <li key={link}>
-                    <a
-                      href="#"
-                      className="text-sm text-gray-600 hover:text-blue-700 transition-colors"
-                    >
-                      {link}
-                    </a>
+                    <a href="#" className="text-sm text-gray-600 hover:text-blue-700 transition-colors">{link}</a>
                   </li>
                 ))}
               </ul>

@@ -2,17 +2,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const DOC_TYPES = ["DNI", "PASSPORT", "FOREIGN_ID", "RUC"] as const;
-const DOC_LABELS: Record<string, string> = {
-  DNI: "DNI",
-  PASSPORT: "Pasaporte",
-  FOREIGN_ID: "Identificación Extranjera",
-  RUC: "RUC",
-};
-
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400";
+import { SimpleNav } from "@/app/components/SimpleNav";
+import { Alert } from "@/app/components/Alert";
+import { DOC_TYPES, DOC_LABELS } from "@/features/users/users.constants";
+import { inputClass } from "@/lib/styles";
 
 export default function PatientRegisterPage() {
   const router = useRouter();
@@ -61,20 +54,7 @@ export default function PatientRegisterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <nav className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between shadow-sm">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center text-white font-black text-xl">
-            +
-          </div>
-          <div>
-            <p className="font-bold text-gray-900">Hospital San Rafael</p>
-            <p className="text-xs text-gray-500">Sistema de salud integral</p>
-          </div>
-        </Link>
-        <Link href="/" className="text-sm text-blue-700 hover:underline font-medium">
-          ← Volver al inicio
-        </Link>
-      </nav>
+      <SimpleNav backHref="/" backLabel="← Volver al inicio" />
 
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-lg">
@@ -84,96 +64,46 @@ export default function PatientRegisterPage() {
               PORTAL DEL PACIENTE
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Crear cuenta</h1>
-            <p className="text-sm text-gray-500 mb-7">
-              Acceda a sus citas, historial clínico y más
-            </p>
+            <p className="text-sm text-gray-500 mb-7">Acceda a sus citas, historial clínico y más</p>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-5">
-                {error}
-              </div>
-            )}
+            {error && <Alert variant="error" message={error} />}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
-                <input
-                  placeholder="Nombre"
-                  value={form.firstName}
-                  onChange={(e) => set("firstName", e.target.value)}
-                  className={inputClass}
-                  required
-                />
-                <input
-                  placeholder="Apellido"
-                  value={form.lastName}
-                  onChange={(e) => set("lastName", e.target.value)}
-                  className={inputClass}
-                  required
-                />
+                <input placeholder="Nombre" value={form.firstName}
+                  onChange={(e) => set("firstName", e.target.value)} className={inputClass} required />
+                <input placeholder="Apellido" value={form.lastName}
+                  onChange={(e) => set("lastName", e.target.value)} className={inputClass} required />
               </div>
 
-              <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={form.email}
-                onChange={(e) => set("email", e.target.value)}
-                className={inputClass}
-                required
-                autoComplete="email"
-              />
+              <input type="email" placeholder="Correo electrónico" value={form.email}
+                onChange={(e) => set("email", e.target.value)} className={inputClass}
+                required autoComplete="email" />
 
-              <input
-                type="password"
-                placeholder="Contraseña (mín. 8 caracteres)"
-                value={form.password}
-                onChange={(e) => set("password", e.target.value)}
-                className={inputClass}
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
+              <input type="password" placeholder="Contraseña (mín. 8 caracteres)" value={form.password}
+                onChange={(e) => set("password", e.target.value)} className={inputClass}
+                required minLength={8} autoComplete="new-password" />
 
-              <input
-                type="tel"
-                placeholder="Teléfono"
-                value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
-                className={inputClass}
-                required
-              />
+              <input type="tel" placeholder="Teléfono" value={form.phone}
+                onChange={(e) => set("phone", e.target.value)} className={inputClass} required />
 
               <div className="grid grid-cols-2 gap-3">
-                <select
-                  value={form.documentType}
-                  onChange={(e) => set("documentType", e.target.value)}
-                  className={inputClass}
-                >
-                  {DOC_TYPES.map((t) => (
-                    <option key={t} value={t}>{DOC_LABELS[t]}</option>
-                  ))}
+                <select value={form.documentType} onChange={(e) => set("documentType", e.target.value)}
+                  className={inputClass}>
+                  {DOC_TYPES.map((t) => <option key={t} value={t}>{DOC_LABELS[t]}</option>)}
                 </select>
-                <input
-                  placeholder="Número de documento"
-                  value={form.documentNumber}
-                  onChange={(e) => set("documentNumber", e.target.value)}
-                  className={inputClass}
-                  required
-                />
+                <input placeholder="Número de documento" value={form.documentNumber}
+                  onChange={(e) => set("documentNumber", e.target.value)} className={inputClass} required />
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-700 text-white py-3.5 rounded-xl text-sm font-semibold hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors mt-1"
-              >
+              <button type="submit" disabled={loading}
+                className="w-full bg-blue-700 text-white py-3.5 rounded-xl text-sm font-semibold hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors mt-1">
                 {loading ? "Creando cuenta..." : "Crear cuenta"}
               </button>
 
               <p className="text-center text-sm text-gray-500">
                 ¿Ya tiene cuenta?{" "}
-                <Link href="/" className="text-blue-700 font-semibold hover:underline">
-                  Iniciar sesión
-                </Link>
+                <Link href="/" className="text-blue-700 font-semibold hover:underline">Iniciar sesión</Link>
               </p>
             </form>
           </div>
