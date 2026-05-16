@@ -212,12 +212,69 @@ El BFF expone estos endpoints en el puerto 3000:
 
 ## Variables de entorno
 
-Crear un archivo `.env.local` en la raíz del proyecto:
+El BFF necesita saber dónde están los microservicios. Se configuran como variables de entorno para no hardcodear URLs en el código.
 
 ```env
+# .env.local (desarrollo local)
 MS_AUTH_URL=http://localhost:8080
 MS_USER_URL=http://localhost:8081
 ```
+
+En producción estas variables apuntan a los servicios desplegados en Railway (ver sección siguiente).
+
+---
+
+## Despliegue en producción
+
+El sistema está desplegado en dos plataformas: **Vercel** para el BFF y **Railway** para los microservicios y la base de datos.
+
+```
+Usuario
+  │
+  ▼
+Vercel — BFF Next.js              → https://bff-nextjs.vercel.app
+  │
+  ├──► Railway — ms-auth          → https://ms-auth-production-38c7.up.railway.app
+  └──► Railway — ms-user          → https://ms-user-production.up.railway.app
+                  │
+                  └──► Railway — PostgreSQL (red interna, sin exposición pública)
+```
+
+### Vercel
+
+Aloja el BFF (frontend + API Routes). Hace auto-deploy cada vez que se sube un cambio a la rama `main`.
+
+Las siguientes variables de entorno están configuradas en el panel de Vercel para que el BFF sepa a dónde llamar:
+
+| Variable | Valor |
+|----------|-------|
+| `MS_AUTH_URL` | `https://ms-auth-production-38c7.up.railway.app` |
+| `MS_USER_URL` | `https://ms-user-production.up.railway.app` |
+
+### Railway
+
+Aloja los dos microservicios Java y la base de datos PostgreSQL dentro del proyecto `happy-ambition`.
+
+**PostgreSQL** corre en la red interna de Railway (no es accesible desde internet). Tiene dos bases de datos separadas:
+- `msauth_db` — guarda emails, contraseñas hasheadas y JWT
+- `msuser_db` — guarda los perfiles de los usuarios
+
+Para conectarse desde una herramienta externa como TablePlus o DBeaver:
+
+| Campo | Valor |
+|-------|-------|
+| Host | `yamanote.proxy.rlwy.net` |
+| Puerto | `26663` |
+| Usuario | `postgres` |
+
+### Usuario administrador
+
+Existe un usuario ADMIN creado en la base de datos de producción:
+
+| Campo | Valor |
+|-------|-------|
+| Email | `admin@hospital.com` |
+| Password | `Admin1234!` |
 
 ---
 
@@ -228,7 +285,15 @@ MS_USER_URL=http://localhost:8081
 - ms-auth corriendo en puerto 8080
 - ms-user corriendo en puerto 8081
 
-### Pasos
+### Opción A — Docker Compose (recomendado)
+
+Levanta PostgreSQL + ms-auth + ms-user en un solo comando desde la carpeta `Ms-User/`:
+
+```bash
+docker compose up --build
+```
+
+### Opción B — Manual
 
 ```bash
 # 1. Instalar dependencias
@@ -236,7 +301,6 @@ npm install
 
 # 2. Configurar variables de entorno
 cp .env.example .env.local
-# Editar .env.local si los puertos son distintos
 
 # 3. Modo desarrollo
 npm run dev
