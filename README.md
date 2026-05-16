@@ -1,4 +1,22 @@
-# BFF — Hospital San Rafael
+# BFF — Salud RedNorte · Plataforma de Listas de Espera Hospitalarias
+
+**Despliegue en producción:** [https://bff-nextjs.vercel.app](https://bff-nextjs.vercel.app)
+
+---
+
+## Contexto del caso
+
+El **Servicio público de Salud RedNorte** administra una red de hospitales, centros de atención primaria y clínicas especializadas que brindan atención médica a gran parte de la población del norte del país.
+
+Uno de los mayores desafíos en los sistemas de salud pública es la **gestión eficiente de las listas de espera** para consultas médicas, procedimientos y cirugías. La alta demanda por servicios de salud —sumada a limitaciones de infraestructura y disponibilidad de profesionales— genera demoras que afectan la calidad de atención.
+
+Con el objetivo de mejorar el proceso y afrontar problemas como **priorización de casos, cancelaciones de último momento, falta de integración entre hospitales y escasa visibilidad del estado de las solicitudes** por parte de los pacientes, Salud RedNorte ha decidido impulsar el desarrollo de una **plataforma tecnológica basada en microservicios** que permita gestionar de forma eficiente las listas de espera, optimizando el uso de horas médicas disponibles y mejorando la comunicación con los pacientes.
+
+Este proyecto forma parte de un **caso semestral** desarrollado en tres etapas. En el Examen Final Transversal, todos los módulos desarrollados se integran en un sistema funcional completo.
+
+---
+
+## Sobre este proyecto
 
 Backend for Frontend construido con **Next.js 16 + TypeScript** que actúa como capa intermedia entre el frontend del hospital y dos microservicios Java (Spring Boot).
 
