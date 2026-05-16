@@ -21,7 +21,7 @@ export function HospitalLogo({ size = "md", href, subtitle }: HospitalLogoProps)
         +
       </div>
       <div>
-        <p className={`font-bold text-gray-900 ${label}`}>Hospital San Rafael</p>
+        <p className={`font-bold text-gray-900 ${label}`}>Salud RedNorte</p>
         <p className="text-xs text-gray-500">{subtitle ?? DEFAULT_SUBTITLE[size]}</p>
       </div>
     </>

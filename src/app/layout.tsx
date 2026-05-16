@@ -1,6 +1,6 @@
 import "./globals.css";
 
-export const metadata = { title: "Hospital San Rafael" };
+export const metadata = { title: "Salud RedNorte" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
