@@ -1,381 +1,197 @@
-# BFF — Salud RedNorte · Plataforma de Listas de Espera Hospitalarias
+# BFF — Salud RedNorte · Gestor de Citas Hospitalarias
 
-**Despliegue en producción:** [https://bff-nextjs.vercel.app](https://bff-nextjs.vercel.app)
-
----
-
-## Contexto del caso
-
-El **Servicio público de Salud RedNorte** administra una red de hospitales, centros de atención primaria y clínicas especializadas que brindan atención médica a gran parte de la población del norte del país.
-
-Uno de los mayores desafíos en los sistemas de salud pública es la **gestión eficiente de las listas de espera** para consultas médicas, procedimientos y cirugías. La alta demanda por servicios de salud —sumada a limitaciones de infraestructura y disponibilidad de profesionales— genera demoras que afectan la calidad de atención.
-
-Con el objetivo de mejorar el proceso y afrontar problemas como **priorización de casos, cancelaciones de último momento, falta de integración entre hospitales y escasa visibilidad del estado de las solicitudes** por parte de los pacientes, Salud RedNorte ha decidido impulsar el desarrollo de una **plataforma tecnológica basada en microservicios** que permita gestionar de forma eficiente las listas de espera, optimizando el uso de horas médicas disponibles y mejorando la comunicación con los pacientes.
-
-Este proyecto forma parte de un **caso semestral** desarrollado en tres etapas. En el Examen Final Transversal, todos los módulos desarrollados se integran en un sistema funcional completo.
+**Stack:** Java 21 · Spring Boot 3.4 · Gradle 8 · MVC
 
 ---
 
-## Sobre este proyecto
-
-Backend for Frontend construido con **Next.js 16 + TypeScript** que actúa como capa intermedia entre el frontend del hospital y dos microservicios Java (Spring Boot).
-
----
-
-## Arquitectura general
+## Arquitectura del sistema
 
 ```
 Browser / App
      │
      ▼
-┌─────────────────────────────┐
-│           BFF               │  ← Next.js (este proyecto)
-│  Next.js API Routes +       │     Puerto 3000
-│  Frontend (App Router)      │
-└────────────┬────────────────┘
-             │
-     ┌───────┴────────┐
-     ▼                ▼
-┌─────────┐     ┌──────────┐
-│ ms-auth │     │ ms-user  │
-│  :8080  │     │  :8081   │
-└─────────┘     └──────────┘
-```
+┌─────────────────────────┐
+│      frontend/          │  ← Next.js 16 · TypeScript · Tailwind   :3001
+│  (repo independiente)   │     cd frontend && npm run dev
+└──────────┬──────────────┘
+           │  HTTP  (NEXT_PUBLIC_BFF_URL)
+           ▼
+┌─────────────────────────┐
+│         BFF             │  ← Spring Boot 3.4 · Java 21  :8090  ← este proyecto
+│  MVC puro — solo API    │
+└──┬──────┬──────┬───┬────┘
+   │      │      │   │
+   ▼      ▼      ▼   ▼
+ ms-    ms-   ms-ap  ms-
+ auth   user  point  wait
+ :8080  :8081  ment  list
+               :8082  :8083
+               (*)    (*)
 
-El BFF expone una sola URL al frontend, abstrae la comunicación con los microservicios y sirve las páginas del portal hospitalario.
-
----
-
-## Patrones de diseño aplicados
-
-### 1. Screaming Architecture
-La estructura de carpetas refleja el **dominio del negocio**, no la capa técnica. Al ver `src/features/auth` y `src/features/users` queda claro qué hace la aplicación sin necesidad de leer código.
-
-### 2. Repository Pattern
-Cada microservicio tiene una **interfaz** (`IAuthRepository`, `IUsersRepository`) y una **implementación** concreta que encapsula las llamadas HTTP. El `Service` depende de la interfaz, lo que permite intercambiar implementaciones (p. ej., mocks para tests) sin tocar la lógica de negocio.
-
-```
-Feature
-  ├── types.ts          → Tipos e interfaz del repositorio
-  ├── *.repository.ts   → Implementación HTTP (fetch hacia el microservicio)
-  └── *.service.ts      → Lógica de negocio, usa el repositorio por inyección
+(*) pendiente de implementación — el BFF ya tiene las rutas y modelos listos.
 ```
 
 ---
 
-## Estructura del proyecto
+## Arquitectura MVC del BFF
 
 ```
-src/
-├── app/
-│   ├── api/                          ← API Routes (BFF endpoints)
-│   │   ├── auth/
-│   │   │   ├── login/route.ts        POST /api/auth/login
-│   │   │   └── validate/route.ts     GET  /api/auth/validate?token=
-│   │   └── users/
-│   │       ├── route.ts              GET  /api/users  |  POST /api/users
-│   │       └── [id]/route.ts         GET / PUT / DELETE /api/users/:id
-│   │
-│   ├── components/                   ← Componentes reutilizables
-│   │   ├── Alert.tsx                 Alertas de error y éxito
-│   │   ├── HospitalLogo.tsx          Logo del hospital (tamaño sm/md, con o sin enlace)
-│   │   ├── LoginForm.tsx             Formulario de login (cliente)
-│   │   └── SimpleNav.tsx             Navbar con logo + enlace de vuelta
-│   │
-│   ├── dashboard/
-│   │   └── page.tsx                  Panel del usuario autenticado
-│   │
-│   ├── register/
-│   │   ├── page.tsx                  Registro de pacientes (público)
-│   │   └── staff/
-│   │       └── page.tsx              Registro de personal (solo ADMIN)
-│   │
-│   ├── page.tsx                      Landing + login
-│   ├── layout.tsx
-│   └── globals.css
+src/main/java/cl/rednorte/bff/
+├── BffApplication.java
 │
-├── features/
-│   ├── auth/
-│   │   ├── auth.types.ts             LoginRequest, AuthResponse, IAuthRepository
-│   │   ├── auth.repository.ts        HTTP → ms-auth :8080
-│   │   └── auth.service.ts
-│   └── users/
-│       ├── users.constants.ts        DOC_TYPES, DOC_LABELS, ROLE_LABELS, ROLE_COLORS
-│       ├── users.types.ts            CreateUserRequest, UserResponse, IUsersRepository
-│       ├── users.repository.ts       HTTP → ms-user :8081
-│       └── users.service.ts
+├── config/
+│   ├── CorsConfig.java          ← CORS: permite origen FRONTEND_URL
+│   └── RestClientConfig.java    ← Beans RestClient por microservicio
 │
-└── lib/
-    ├── api-error.ts                  Error tipado con status HTTP
-    ├── env.ts                        Variables de entorno centralizadas
-    ├── http-client.ts                Cliente fetch (GET / POST / PUT / DELETE)
-    ├── route-handler.ts              Helper de manejo de errores en rutas
-    ├── session.ts                    getSession() y clearSession() para storage
-    └── styles.ts                     Clases CSS compartidas (inputClass)
+├── controller/                  ← Capa C — recibe HTTP, valida, delega al Service
+│   ├── AuthController.java
+│   ├── UserController.java
+│   ├── AppointmentController.java
+│   └── WaitlistController.java
+│
+├── service/                     ← Capa S — orquesta llamadas HTTP a microservicios
+│   ├── AuthService.java
+│   ├── UserService.java
+│   ├── AppointmentService.java
+│   └── WaitlistService.java
+│
+├── model/                       ← Capa M — DTOs de entrada y salida (Java records)
+│   ├── request/
+│   │   ├── LoginRequest.java
+│   │   ├── CreateUserRequest.java
+│   │   ├── UpdateUserRequest.java
+│   │   ├── CreateAppointmentRequest.java
+│   │   ├── UpdateAppointmentRequest.java
+│   │   └── CreateWaitlistEntryRequest.java
+│   └── response/
+│       ├── AuthResponse.java
+│       ├── TokenValidationResponse.java
+│       ├── UserResponse.java
+│       ├── AppointmentResponse.java
+│       └── WaitlistEntryResponse.java
+│
+└── exception/
+    ├── ApiException.java         ← Error tipado con status HTTP
+    └── GlobalExceptionHandler.java ← @RestControllerAdvice centralizado
 ```
-
----
-
-## Reutilización de componentes y utilidades
-
-El proyecto aplica reutilización en tres niveles:
-
-### Componentes UI compartidos (`src/app/components/`)
-
-| Componente | Usado en | Responsabilidad |
-|------------|----------|-----------------|
-| `HospitalLogo` | `page.tsx`, `dashboard/`, `register/`, `register/staff/` | Logo + nombre del hospital, tamaño configurable, envuelve en `<Link>` si recibe `href` |
-| `SimpleNav` | `register/page.tsx`, `register/staff/page.tsx` | Navbar estándar con logo y enlace de retorno |
-| `Alert` | `LoginForm`, `register/`, `register/staff/`, `dashboard/` | Alerta de `error` o `success` con estilos consistentes |
-
-### Constantes de dominio compartidas (`src/features/users/users.constants.ts`)
-
-| Constante | Tipo | Usado en |
-|-----------|------|----------|
-| `DOC_TYPES` | `readonly array` | Ambos registros |
-| `DOC_LABELS` | `Record` | Ambos registros + dashboard |
-| `STAFF_ROLES` | `readonly array` | Registro de staff |
-| `ROLE_LABELS` | `Record` | Registro de staff + dashboard |
-| `ROLE_COLORS` | `Record` | Registro de staff |
-
-### Utilidades de lib (`src/lib/`)
-
-| Utilidad | Usado en | Responsabilidad |
-|----------|----------|-----------------|
-| `inputClass` (`styles.ts`) | Ambos registros | String de clases Tailwind para inputs del formulario |
-| `getSession` / `clearSession` (`session.ts`) | `dashboard/`, `register/staff/` | Lectura y limpieza de `localStorage`/`sessionStorage` |
-
----
-
-## Microservicios conectados
-
-### ms-auth — Puerto 8080
-Gestiona autenticación y tokens JWT.
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/api/auth/login` | Devuelve JWT dado email + password |
-| `POST` | `/api/auth/register` | Registra credenciales (llamado internamente por ms-user) |
-| `GET`  | `/api/auth/validate?token=` | Valida un JWT y devuelve claims |
-
-### ms-user — Puerto 8081
-Gestiona el perfil de los usuarios del hospital.
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/api/users/register` | Crea usuario y llama a ms-auth para registrar credenciales |
-| `GET`  | `/api/users` | Lista todos los usuarios activos |
-| `GET`  | `/api/users/:id` | Obtiene un usuario por ID |
-| `PUT`  | `/api/users/:id` | Actualiza datos del usuario |
-| `DELETE` | `/api/users/:id` | Desactiva (soft delete) un usuario |
 
 ---
 
 ## API Routes del BFF
 
-El BFF expone estos endpoints en el puerto 3000:
+### Auth — ms-auth :8080
+| Método | Ruta BFF             | Redirige a                        |
+|--------|----------------------|-----------------------------------|
+| POST   | /api/auth/login      | ms-auth POST /api/auth/login      |
+| GET    | /api/auth/validate   | ms-auth GET  /api/auth/validate   |
 
-| Método | Ruta BFF | Redirige a |
-|--------|----------|------------|
-| `POST` | `/api/auth/login` | ms-auth `POST /api/auth/login` |
-| `GET`  | `/api/auth/validate` | ms-auth `GET /api/auth/validate` |
-| `GET`  | `/api/users` | ms-user `GET /api/users` |
-| `POST` | `/api/users` | ms-user `POST /api/users/register` |
-| `GET`  | `/api/users/:id` | ms-user `GET /api/users/:id` |
-| `PUT`  | `/api/users/:id` | ms-user `PUT /api/users/:id` |
-| `DELETE` | `/api/users/:id` | ms-user `DELETE /api/users/:id` |
+### Users — ms-user :8081
+| Método | Ruta BFF             | Redirige a                         |
+|--------|----------------------|------------------------------------|
+| GET    | /api/users           | ms-user GET  /api/users            |
+| POST   | /api/users           | ms-user POST /api/users/register   |
+| GET    | /api/users/{id}      | ms-user GET  /api/users/{id}       |
+| PUT    | /api/users/{id}      | ms-user PUT  /api/users/{id}       |
+| DELETE | /api/users/{id}      | ms-user DELETE /api/users/{id}     |
 
----
+### Appointments — ms-appointment :8082 *(pendiente)*
+| Método | Ruta BFF                              | Redirige a                              |
+|--------|---------------------------------------|-----------------------------------------|
+| GET    | /api/appointments                     | ms-appointment GET /api/appointments    |
+| POST   | /api/appointments                     | ms-appointment POST /api/appointments   |
+| GET    | /api/appointments/{id}                | ms-appointment GET /api/appointments/{id} |
+| PUT    | /api/appointments/{id}                | ms-appointment PUT /api/appointments/{id} |
+| DELETE | /api/appointments/{id}                | ms-appointment DELETE                   |
+| GET    | /api/appointments/patient/{patientId} | ms-appointment GET /patient/{id}        |
+| GET    | /api/appointments/doctor/{doctorId}   | ms-appointment GET /doctor/{id}         |
 
-## Páginas del portal
-
-| Ruta | Acceso | Descripción |
-|------|--------|-------------|
-| `/` | Público | Landing page con formulario de login |
-| `/register` | Público | Registro de pacientes |
-| `/register/staff` | Solo ADMIN | Registro de médicos, enfermeros y personal |
-| `/dashboard` | Autenticado | Perfil del usuario logueado |
-
----
-
-## Roles del sistema
-
-| Rol | Descripción | Puede registrarse en |
-|-----|-------------|----------------------|
-| `PATIENT` | Paciente | `/register` (público) |
-| `DOCTOR` | Médico | `/register/staff` (admin) |
-| `NURSE` | Enfermero/a | `/register/staff` (admin) |
-| `ADMIN` | Administrador | `/register/staff` (admin) |
-| `RECEPTIONIST` | Recepcionista | `/register/staff` (admin) |
+### Waitlist — ms-waitlist :8083 *(pendiente)*
+| Método | Ruta BFF                            | Redirige a                            |
+|--------|-------------------------------------|---------------------------------------|
+| GET    | /api/waitlist                       | ms-waitlist GET /api/waitlist         |
+| POST   | /api/waitlist                       | ms-waitlist POST /api/waitlist        |
+| GET    | /api/waitlist/{id}                  | ms-waitlist GET /api/waitlist/{id}    |
+| DELETE | /api/waitlist/{id}                  | ms-waitlist DELETE                    |
+| GET    | /api/waitlist/patient/{patientId}   | ms-waitlist GET /patient/{id}         |
 
 ---
 
 ## Variables de entorno
 
-El BFF necesita saber dónde están los microservicios. Se configuran como variables de entorno para no hardcodear URLs en el código.
+```properties
+# application.properties / variables del entorno de deploy
 
-```env
-# .env.local (desarrollo local)
 MS_AUTH_URL=http://localhost:8080
 MS_USER_URL=http://localhost:8081
+MS_APPOINTMENTS_URL=http://localhost:8082   # descomentar cuando esté disponible
+MS_WAITLIST_URL=http://localhost:8083       # descomentar cuando esté disponible
+
+FRONTEND_URL=http://localhost:3001          # CORS — en prod: https://frontend.vercel.app
+PORT=8090                                   # Puerto del BFF
 ```
-
-En producción estas variables apuntan a los servicios desplegados en Railway (ver sección siguiente).
-
----
-
-## Despliegue en producción
-
-El sistema está desplegado en dos plataformas: **Vercel** para el BFF y **Railway** para los microservicios y la base de datos.
-
-```
-Usuario
-  │
-  ▼
-Vercel — BFF Next.js              → https://bff-nextjs.vercel.app
-  │
-  ├──► Railway — ms-auth          → https://ms-auth-production-38c7.up.railway.app
-  └──► Railway — ms-user          → https://ms-user-production.up.railway.app
-                  │
-                  └──► Railway — PostgreSQL (red interna, sin exposición pública)
-```
-
-### Vercel
-
-Aloja el BFF (frontend + API Routes). Hace auto-deploy cada vez que se sube un cambio a la rama `main`.
-
-Las siguientes variables de entorno están configuradas en el panel de Vercel para que el BFF sepa a dónde llamar:
-
-| Variable | Valor |
-|----------|-------|
-| `MS_AUTH_URL` | `https://ms-auth-production-38c7.up.railway.app` |
-| `MS_USER_URL` | `https://ms-user-production.up.railway.app` |
-
-### Railway
-
-Aloja los dos microservicios Java y la base de datos PostgreSQL dentro del proyecto `happy-ambition`.
-
-**PostgreSQL** corre en la red interna de Railway (no es accesible desde internet). Tiene dos bases de datos separadas:
-- `msauth_db` — guarda emails, contraseñas hasheadas y JWT
-- `msuser_db` — guarda los perfiles de los usuarios
-
-Para conectarse desde una herramienta externa como TablePlus o DBeaver:
-
-| Campo | Valor |
-|-------|-------|
-| Host | `yamanote.proxy.rlwy.net` |
-| Puerto | `26663` |
-| Usuario | `postgres` |
-
-### Usuario administrador
-
-Existe un usuario ADMIN creado en la base de datos de producción:
-
-| Campo | Valor |
-|-------|-------|
-| Email | `admin@hospital.com` |
-| Password | `Admin1234!` |
 
 ---
 
 ## Instalación y ejecución
 
 ### Prerrequisitos
-- Node.js 18+
-- ms-auth corriendo en puerto 8080
-- ms-user corriendo en puerto 8081
+- Java 21+
+- Gradle 8.x (`brew install gradle` o usar el wrapper)
+- ms-auth corriendo en :8080
+- ms-user corriendo en :8081
 
-### Opción A — Docker Compose (recomendado)
-
-Levanta PostgreSQL + ms-auth + ms-user en un solo comando desde la carpeta `Ms-User/`:
-
+### Generar el Gradle wrapper (primera vez)
 ```bash
-docker compose up --build
+gradle wrapper --gradle-version 8.11.1
 ```
 
-### Opción B — Manual
-
+### Desarrollo
 ```bash
-# 1. Instalar dependencias
-npm install
+./gradlew bootRun
+# → http://localhost:8090
+```
 
-# 2. Configurar variables de entorno
-cp .env.example .env.local
+### Build
+```bash
+./gradlew build
+java -jar build/libs/bff-0.1.0.jar
+```
 
-# 3. Modo desarrollo
-npm run dev
-# → http://localhost:3000
-
-# 4. Build de producción
-npm run build
-npm start
+### Tests
+```bash
+./gradlew test
 ```
 
 ---
 
-## Flujos principales
+## Agregar un nuevo microservicio
 
-### Registro de paciente
-```
-/register → POST /api/users (role: PATIENT) → redirige a / con banner de éxito
-```
+Cuando ms-appointment o ms-waitlist estén listos, el proceso es:
 
-### Registro de personal (admin)
-```
-/dashboard → clic en "Registrar personal" → /register/staff
-→ POST /api/users (role: DOCTOR | NURSE | ADMIN | RECEPTIONIST)
-→ muestra confirmación y permite registrar otro
-```
+1. Definir `MS_APPOINTMENTS_URL` (ya está en `application.properties`)
+2. El bean `appointmentClient` ya existe en `RestClientConfig.java`
+3. El `AppointmentService` ya realiza las llamadas HTTP — solo conectar el servicio real
+4. Todos los modelos y endpoints del controller ya están definidos
 
-### Login
-```
-/ → POST /api/auth/login → guarda token en storage → /dashboard
-```
-
-### Dashboard
-```
-/dashboard → GET /api/users/:userId → muestra perfil completo
-           → (si ADMIN) botón "+ Registrar personal" visible
-```
+Para un microservicio completamente nuevo (ej. ms-notifications):
+- Agregar variable en `application.properties`
+- Agregar `@Bean` en `RestClientConfig.java`
+- Crear `model/request/` y `model/response/`
+- Crear `service/NotificationService.java`
+- Crear `controller/NotificationController.java`
 
 ---
 
-## Stack tecnológico
+## Despliegue en producción
 
-| Tecnología | Versión | Uso |
-|------------|---------|-----|
-| Next.js | ^16.2.6 | Framework fullstack (App Router) |
-| React | ^19.0.0 | Librería de UI |
-| React DOM | ^19.0.0 | Renderizado en el navegador |
-| TypeScript | ^5.x | Tipado estático |
-| Tailwind CSS | ^3.4.19 | Estilos utilitarios |
-| PostCSS | ^8.5.14 | Procesamiento de CSS |
-| Autoprefixer | ^10.5.0 | Compatibilidad de prefijos CSS |
-| @types/node | ^20.x | Tipos de Node.js para TypeScript |
-| @types/react | ^19.x | Tipos de React para TypeScript |
-| Node.js fetch | nativo | Cliente HTTP hacia microservicios |
+```
+Frontend (Vercel) → BFF (Railway :8090) → ms-auth (Railway :8080)
+                                         → ms-user (Railway :8081)
+```
 
----
-
-## Por qué Next.js y no otro framework
-
-### Alternativas consideradas
-
-| Framework | Motivo de descarte |
-|-----------|-------------------|
-| **Express + React (SPA)** | Requiere mantener dos proyectos separados: un servidor Express para el BFF y un cliente React. Next.js unifica ambos en un solo proyecto con App Router. |
-| **NestJS** | Excelente para APIs puras, pero no incluye rendering de UI. Al necesitar también un portal web hospitalario, añadir React por separado duplica la complejidad. |
-| **Remix** | Buena opción fullstack, pero el ecosistema es más pequeño, con menos integración nativa para patterns como API Routes, middleware y Server Components. |
-| **Vite + React (SPA pura)** | No tiene servidor propio; el BFF necesita ejecutar lógica server-side (validación de tokens, llamadas a microservicios) que no debe exponerse al navegador. |
-
-### Por qué Next.js encaja en este proyecto
-
-1. **BFF nativo con API Routes** — las rutas bajo `src/app/api/` corren en el servidor de Node.js, no en el browser. Esto permite llamar a los microservicios Java con credenciales o lógica privada sin exponerlas al cliente.
-
-2. **Frontend y backend en un solo repositorio** — el portal hospitalario (páginas de login, dashboard, registro) y los endpoints del BFF conviven en el mismo proyecto, con el mismo lenguaje (TypeScript) y las mismas herramientas de build.
-
-3. **App Router con React Server Components** — permite hacer fetching de datos directamente en el servidor, reduciendo roundtrips y mejorando el tiempo de carga del portal.
-
-4. **TypeScript de primera clase** — la configuración de TS viene incluida y optimizada; no hace falta configurar Babel, Webpack ni loaders manualmente.
-
-5. **Despliegue simple** — un solo `npm run build && npm start` levanta tanto el servidor del BFF como el portal, sin necesidad de orquestar procesos separados.
+Variables en Railway para el BFF:
+| Variable             | Valor                                            |
+|----------------------|--------------------------------------------------|
+| MS_AUTH_URL          | https://ms-auth-production-38c7.up.railway.app   |
+| MS_USER_URL          | https://ms-user-production.up.railway.app        |
+| FRONTEND_URL         | https://[tu-frontend].vercel.app                 |
